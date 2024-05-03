@@ -1,0 +1,7 @@
+# Restrict all files related to releases/GHA to
+# require maintainer team approval.
+
+.github/workflows/          @aws-sdk-python
+.github/CODEOWNERS          @aws-sdk-python
+src/aws-sdk-signers/_version.py     @aws-sdk-python
+pyproject.toml              @aws-sdk-python
