@@ -1,11 +1,11 @@
-## My Project
+## AWS SDK Python Signers
 
-TODO: Fill this README out!
+AWS SDK Python Signers provides stand-alone signing functionality. This allows users to
+create standardized request signatures (currently only SigV4) and apply them to common HTTP utilities like AioHTTP, Curl, Postman, Requests and urllib3.
 
-Be sure to:
+## Getting Started
 
-* Change the title in this README
-* Edit your repository description on GitHub
+<TODO>
 
 ## Security
 
