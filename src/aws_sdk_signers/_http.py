@@ -13,16 +13,14 @@ __all__ attributes provided in the types/__init__.py file.
 from collections import Counter, OrderedDict
 from collections.abc import AsyncIterable, Iterable, Iterator
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from functools import cached_property
 from urllib.parse import urlunparse
 
-import aws_sdk_signers.interfaces as interfaces
-import aws_sdk_signers.interfaces.http  # noqa: F401
-from aws_sdk_signers.interfaces.http import FieldPosition
+import aws_sdk_signers.interfaces.http as interfaces_http
 
 
-class Field(interfaces.http.Field):
+class Field(interfaces_http.Field):
     """A name-value pair representing a single field in an HTTP Request or Response.
 
     The kind will dictate metadata placement within an HTTP message.
@@ -37,7 +35,7 @@ class Field(interfaces.http.Field):
         *,
         name: str,
         values: Iterable[str] | None = None,
-        kind: FieldPosition = FieldPosition.HEADER,
+        kind: interfaces_http.FieldPosition = interfaces_http.FieldPosition.HEADER,
     ):
         self.name = name
         self.values: list[str] = [val for val in values] if values is not None else []
@@ -59,8 +57,9 @@ class Field(interfaces.http.Field):
         except ValueError:
             return
 
-    def as_string(self) -> str:
-        """Get comma-delimited string of all values.
+    def as_string(self, delimiter: str = ", ") -> str:
+        """Get delimited string of all values. A comma followed by a space is used
+        by default.
 
         If the ``Field`` has zero values, the empty string is returned. If the ``Field``
         has exactly one value, the value is returned unmodified.
@@ -75,9 +74,8 @@ class Field(interfaces.http.Field):
         if value_count == 0:
             return ""
         if value_count == 1:
-            print(self.values)
             return self.values[0]
-        return ", ".join(quote_and_escape_field_value(val) for val in self.values)
+        return delimiter.join(quote_and_escape_field_value(val) for val in self.values)
 
     def as_tuples(self) -> list[tuple[str, str]]:
         """Get list of ``name``, ``value`` tuples where each tuple represents one
@@ -101,10 +99,10 @@ class Field(interfaces.http.Field):
         return f"Field(name={self.name!r}, value={self.values!r}, kind={self.kind!r})"
 
 
-class Fields(interfaces.http.Fields):
+class Fields(interfaces_http.Fields):
     def __init__(
         self,
-        initial: Iterable[interfaces.http.Field] | None = None,
+        initial: Iterable[interfaces_http.Field] | None = None,
         *,
         encoding: str = "utf-8",
     ):
@@ -129,14 +127,14 @@ class Fields(interfaces.http.Fields):
                 f"{', '.join(non_unique_names)}."
             )
         init_tuples = zip(init_field_names, init_fields)
-        self.entries: OrderedDict[str, interfaces.http.Field] = OrderedDict(init_tuples)
+        self.entries: OrderedDict[str, interfaces_http.Field] = OrderedDict(init_tuples)
         self.encoding: str = encoding
 
-    def set_field(self, field: interfaces.http.Field) -> None:
+    def set_field(self, field: interfaces_http.Field) -> None:
         """Alias for __setitem__ to utilize the field.name for the entry key."""
         self.__setitem__(field.name, field)
 
-    def __setitem__(self, name: str, field: interfaces.http.Field) -> None:
+    def __setitem__(self, name: str, field: interfaces_http.Field) -> None:
         """Set or override entry for a Field name."""
         normalized_name = self._normalize_field_name(name)
         normalized_field_name = self._normalize_field_name(field.name)
@@ -148,11 +146,11 @@ class Fields(interfaces.http.Fields):
         self.entries[normalized_name] = field
 
     def get(
-        self, key: str, default: interfaces.http.Field | None = None
-    ) -> interfaces.http.Field | None:
+        self, key: str, default: interfaces_http.Field | None = None
+    ) -> interfaces_http.Field | None:
         return self[key] if key in self else default
 
-    def __getitem__(self, name: str) -> interfaces.http.Field:
+    def __getitem__(self, name: str) -> interfaces_http.Field:
         """Retrieve Field entry."""
         normalized_name = self._normalize_field_name(name)
         return self.entries[normalized_name]
@@ -163,15 +161,15 @@ class Fields(interfaces.http.Fields):
         del self.entries[normalized_name]
 
     def get_by_type(
-        self, kind: interfaces.http.FieldPosition
-    ) -> list[interfaces.http.Field]:
+        self, kind: interfaces_http.FieldPosition
+    ) -> list[interfaces_http.Field]:
         """Helper function for retrieving specific types of fields.
 
         Used to grab all headers or all trailers.
         """
         return [entry for entry in self.entries.values() if entry.kind is kind]
 
-    def extend(self, other: interfaces.http.Field) -> None:
+    def extend(self, other: interfaces_http.Fields) -> None:
         """Merges ``entries`` of ``other`` into the current ``entries``.
 
         For every `Field` in the ``entries`` of ``other``: If the normalized name
@@ -202,7 +200,7 @@ class Fields(interfaces.http.Fields):
             return False
         return self.encoding == other.encoding and self.entries == other.entries
 
-    def __iter__(self) -> Iterator[interfaces.http.Field]:
+    def __iter__(self) -> Iterator[interfaces_http.Field]:
         yield from self.entries.values()
 
     def __len__(self) -> int:
@@ -216,7 +214,7 @@ class Fields(interfaces.http.Fields):
 
 
 @dataclass(kw_only=True, frozen=True)
-class URI(interfaces.http.URI):
+class URI(interfaces_http.URI):
     """Universal Resource Identifier, target location for a :py:class:`HTTPRequest`."""
 
     scheme: str = "https"
@@ -287,6 +285,9 @@ class URI(interfaces.http.URI):
         )
         return urlunparse(components)
 
+    def to_dict(self) -> dict[str, int | str | None]:
+        return {k: v for k, v in asdict(self).items()}
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, URI):
             return False
@@ -302,11 +303,11 @@ class URI(interfaces.http.URI):
         )
 
 
-class AWSRequest(interfaces.http.Request):
+class AWSRequest(interfaces_http.Request):
     def __init__(
         self,
         *,
-        destination: URI,
+        destination: interfaces_http.URI,
         method: str,
         body: AsyncIterable[bytes] | Iterable[bytes],
         fields: Fields,
@@ -317,8 +318,8 @@ class AWSRequest(interfaces.http.Request):
         self.fields = fields
 
     def __deepcopy__(
-        self, memo: dict[int, interfaces.http.Request] | None = None
-    ) -> interfaces.http.Request:
+        self, memo: dict[int, interfaces_http.Request] | None = None
+    ) -> interfaces_http.Request:
         if memo is None:
             memo = {}
 

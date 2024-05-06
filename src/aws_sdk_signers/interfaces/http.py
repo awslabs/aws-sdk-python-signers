@@ -5,6 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from collections.abc import AsyncIterable, Iterable, Iterator
 from enum import Enum
 from typing import Protocol
@@ -58,7 +59,7 @@ class Field(Protocol):
         """Remove all matching entries from list."""
         ...
 
-    def as_string(self) -> str:
+    def as_string(self, delimiter: str = ", ") -> str:
         """Serialize the ``Field``'s values into a single line string."""
         ...
 
@@ -73,8 +74,8 @@ class Fields(Protocol):
     fields."""
 
     # Entries are keyed off the name of a provided Field
-    entries: dict[str, Field]
-    encoding: str | None = "utf-8"
+    entries: OrderedDict[str, Field]
+    encoding: str = "utf-8"
 
     def set_field(self, field: Field) -> None:
         """Alias for __setitem__ to utilize the field.name for the entry key."""
