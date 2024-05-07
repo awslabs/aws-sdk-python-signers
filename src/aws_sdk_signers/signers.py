@@ -4,11 +4,15 @@ from dataclasses import dataclass
 import datetime
 from hashlib import sha256
 import hmac
+import io
+import warnings
 from typing import Required, TypedDict
 from urllib.parse import parse_qsl, quote
 
 from ._http import URI, AWSRequest, Fields, Field
 from ._identity import AWSCredentialIdentity
+from ._io import AsyncBytesReader
+from .exceptions import AWSSDKWarning, MissingExpectedParameterException
 
 HEADERS_EXCLUDED_FROM_SIGNING: tuple[str, ...] = (
     "authorization",
@@ -176,7 +180,7 @@ class SigV4Signer:
         normalized_fields = self._normalize_signing_fields(request=request)
         canonical_fields = self._format_canonical_fields(fields=normalized_fields)
         canonical_payload = self._format_canonical_payload(
-            body=request.body, signing_properties=signing_properties
+            request=request, signing_properties=signing_properties
         )
         return (
             f"{request.method.upper()}\n"
@@ -195,8 +199,7 @@ class SigV4Signer:
     ) -> str:
         date = signing_properties.get("date")
         if date is None:
-            # TODO: figure out error type here
-            raise ValueError(
+            raise MissingExpectedParameterException(
                 "Cannot generate string_to_sign without a valid date "
                 f"in your signing_properties. Current value: {date}"
             )
@@ -261,24 +264,59 @@ class SigV4Signer:
             f"{key}:{' '.join(value.split())}\n" for key, value in fields.items()
         )
 
+    def _should_sha256_sign_payload(
+        self,
+        *,
+        request: AWSRequest,
+        signing_properties: SigV4SigningProperties,
+    ) -> bool:
+        # All insecure connections should be signed
+        if request.destination.scheme != "https":
+            return True
+
+        return signing_properties.get("payload_signing_enabled", True)
+
     def _format_canonical_payload(
         self,
         *,
-        body: AsyncIterable[bytes] | Iterable[bytes],
+        request: AWSRequest,
         signing_properties: SigV4SigningProperties,
     ) -> str:
-        if isinstance(body, AsyncIterable):
+        if isinstance(request.body, AsyncIterable):
             raise TypeError(
                 "An async body was attached to a synchronous signer. Please use "
                 "AsyncSigV4Signer for async AWSRequests or ensure your body is "
                 "of type Iterable[bytes]."
             )
-        # TODO: Add ability to sign body
-        return EMPTY_SHA256_HASH
+        if not self._should_sha256_sign_payload(
+            request=request, signing_properties=signing_properties
+        ):
+            return UNSIGNED_PAYLOAD
+
+        warnings.warn(
+            "Payload signing is enabled. This may result in "
+            "decreased performance for large request bodies.",
+            AWSSDKWarning,
+        )
+        body = request.body
+        checksum = sha256()
+        if hasattr(body, "seek") and hasattr(body, "tell"):
+            position = body.tell()
+            for chunk in body:
+                checksum.update(chunk)
+            body.seek(position)
+        else:
+            buffer = io.BytesIO()
+            for chunk in body:
+                buffer.write(chunk)
+                checksum.update(chunk)
+            buffer.seek(0)
+            request.body = buffer
+        return checksum.hexdigest()
 
 
 class AsyncSigV4Signer:
-    def __init__(self, *, config: Configuration):
+    def __init__(self, *, config: Configuration | None = None):
         self._config = config
 
     async def sign(
@@ -410,7 +448,7 @@ class AsyncSigV4Signer:
         normalized_fields = await self._normalize_signing_fields(request=request)
         canonical_fields = await self._format_canonical_fields(fields=normalized_fields)
         canonical_payload = await self._format_canonical_payload(
-            body=request.body, signing_properties=signing_properties
+            request=request, signing_properties=signing_properties
         )
         return (
             f"{request.method.upper()}\n"
@@ -434,10 +472,11 @@ class AsyncSigV4Signer:
                 "Cannot generate string_to_sign without a valid date "
                 f"in your signing_properties. Current value: {date}"
             )
+        scope = await self._scope(signing_properties=signing_properties)
         return (
             "AWS4-HMAC-SHA256\n"
             f"{date}\n"
-            f"{self._scope(signing_properties=signing_properties)}\n"
+            f"{scope}\n"
             f"{sha256(canonical_request.encode()).hexdigest()}"
         )
 
@@ -495,17 +534,55 @@ class AsyncSigV4Signer:
             f"{key}:{' '.join(value.split())}\n" for key, value in fields.items()
         )
 
+    async def _should_sha256_sign_payload(
+        self,
+        *,
+        request: AWSRequest,
+        signing_properties: SigV4SigningProperties,
+    ) -> bool:
+        # All insecure connections should be signed
+        if request.destination.scheme != "https":
+            return True
+
+        return signing_properties.get("payload_signing_enabled", True)
+
     async def _format_canonical_payload(
         self,
         *,
-        body: AsyncIterable[bytes] | Iterable[bytes],
+        request: AWSRequest,
         signing_properties: SigV4SigningProperties,
     ) -> str:
-        if not isinstance(body, AsyncIterable):
-            # TODO: Warn on sync body.
-            pass
-        # TODO: Add ability to sign body
-        return EMPTY_SHA256_HASH
+        if not await self._should_sha256_sign_payload(
+            request=request, signing_properties=signing_properties
+        ):
+            return UNSIGNED_PAYLOAD
+
+        warnings.warn(
+            "Payload signing is enabled. This may result in "
+            "decreased performance for large request bodies.",
+            AWSSDKWarning,
+        )
+        if not isinstance(request.body, AsyncIterable):
+            raise TypeError(
+                "A sync body was attached to a asynchronous signer. Please use "
+                "SigV4Signer for sync AWSRequests or ensure your body is "
+                "of type AsyncIterable[bytes]."
+            )
+        body = request.body
+        checksum = sha256()
+        if hasattr(body, "seek") and hasattr(body, "tell"):
+            position = body.tell()
+            async for chunk in body:
+                checksum.update(chunk)
+            await body.seek(position)
+        else:
+            buffer = io.BytesIO()
+            async for chunk in body:
+                buffer.write(chunk)
+                checksum.update(chunk)
+            buffer.seek(0)
+            request.body = AsyncBytesReader(buffer)
+        return checksum.hexdigest()
 
 
 def _remove_dot_segments(path: str, remove_consecutive_slashes: bool = True) -> str:

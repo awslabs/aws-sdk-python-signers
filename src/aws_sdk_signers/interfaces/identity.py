@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Protocol, TypedDict, TypeVar
+from typing import Protocol
 
 
 class Identity(Protocol):

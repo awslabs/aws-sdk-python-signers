@@ -28,3 +28,6 @@ path = "src/aws_sdk_signers/_version.py"
 [tool.mypy]
 python_version = "3.12"
 strict = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

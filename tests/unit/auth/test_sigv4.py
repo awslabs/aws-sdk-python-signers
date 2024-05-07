@@ -9,12 +9,21 @@ from typing import Iterable
 from freezegun import freeze_time
 import pytest
 
-from aws_sdk_signers import AWSCredentialIdentity, AWSRequest, Field, Fields, URI
+from aws_sdk_signers import (
+    AWSCredentialIdentity,
+    AsyncBytesReader,
+    AWSRequest,
+    Field,
+    Fields,
+    URI,
+)
 from aws_sdk_signers.signers import (
     SIGV4_TIMESTAMP_FORMAT,
+    AsyncSigV4Signer,
     SigV4Signer,
     SigV4SigningProperties,
 )
+from aws_sdk_signers.exceptions import AWSSDKWarning
 
 SECRET_KEY: str = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
 ACCESS_KEY: str = "AKIDEXAMPLE"
@@ -79,14 +88,14 @@ def generate_test_cases() -> Iterable[str]:
         yield test_case_name
 
 
-@pytest.mark.parametrize("test_case", generate_test_cases())
+@pytest.mark.parametrize("test_case_name", generate_test_cases())
 @freeze_time("2015-08-30 12:36:00")
-def test_signature_version_4(test_case_name: str) -> None:
+def test_signature_version_4_sync(test_case_name: str) -> None:
     signer = SigV4Signer()
-    _test_signature_version_4(test_case_name, signer)
+    _test_signature_version_4_sync(test_case_name, signer)
 
 
-def _test_signature_version_4(test_case_name: str, signer: SigV4Signer) -> None:
+def _test_signature_version_4_sync(test_case_name: str, signer: SigV4Signer) -> None:
     test_case = SignatureTestCase(test_case_name)
     request = create_request_from_raw_request(test_case)
 
@@ -95,24 +104,69 @@ def _test_signature_version_4(test_case_name: str, signer: SigV4Signer) -> None:
         service=SERVICE,
         date=DATE_STR,
     )
-    actual_canonical_request = signer.canonical_request(
-        signing_properties=signing_props, request=request
-    )
+    with pytest.warns(AWSSDKWarning):
+        actual_canonical_request = signer.canonical_request(
+            signing_properties=signing_props, request=request
+        )
     assert test_case.canonical_request == actual_canonical_request
     actual_string_to_sign = signer.string_to_sign(
         canonical_request=actual_canonical_request, signing_properties=signing_props
     )
-    """
-    signed_request = signer.sign(
-        signing_properties=signing_props,
-        request=request,
-        identity=test_case.credentials
+    assert test_case.string_to_sign == actual_string_to_sign
+    with pytest.warns(AWSSDKWarning):
+        signed_request = signer.sign(
+            signing_properties=signing_props,
+            request=request,
+            identity=test_case.credentials,
+        )
+    assert (
+        signed_request.fields["Authorization"].as_string()
+        == test_case.authorization_header
     )
-    assert signed_request.fields['Authorization'].as_string() == test_case.authorization_header
-    """
 
 
-def create_request_from_raw_request(test_case: SignatureTestCase) -> AWSRequest:
+@pytest.mark.parametrize("test_case_name", generate_test_cases())
+@freeze_time("2015-08-30 12:36:00")
+async def test_signature_version_4_async(test_case_name: str) -> None:
+    signer = AsyncSigV4Signer()
+    await _test_signature_version_4_async(test_case_name, signer)
+
+
+async def _test_signature_version_4_async(
+    test_case_name: str, signer: AsyncSigV4Signer
+) -> None:
+    test_case = SignatureTestCase(test_case_name)
+    request = create_request_from_raw_request(test_case, async_body=True)
+
+    signing_props = SigV4SigningProperties(
+        region=REGION,
+        service=SERVICE,
+        date=DATE_STR,
+    )
+    with pytest.warns(AWSSDKWarning):
+        actual_canonical_request = await signer.canonical_request(
+            signing_properties=signing_props, request=request
+        )
+    assert test_case.canonical_request == actual_canonical_request
+    actual_string_to_sign = await signer.string_to_sign(
+        canonical_request=actual_canonical_request, signing_properties=signing_props
+    )
+    assert test_case.string_to_sign == actual_string_to_sign
+    with pytest.warns(AWSSDKWarning):
+        signed_request = await signer.sign(
+            signing_properties=signing_props,
+            request=request,
+            identity=test_case.credentials,
+        )
+    assert (
+        signed_request.fields["Authorization"].as_string()
+        == test_case.authorization_header
+    )
+
+
+def create_request_from_raw_request(
+    test_case: SignatureTestCase, async_body: bool = False
+) -> AWSRequest:
     raw = RawRequest(raw_request=test_case.raw_request)
     if raw.error_code is not None:
         raise Exception(raw.error_message)
@@ -133,7 +187,9 @@ def create_request_from_raw_request(test_case: SignatureTestCase) -> AWSRequest:
                 values=[test_case.credentials.session_token],
             )
         )
-    body = raw.rfile
+    body: BytesIO | AsyncBytesReader = raw.rfile
+    if async_body:
+        body = AsyncBytesReader(raw.rfile)
     # BaseHTTPRequestHandler encodes the first line of the request
     # as 'iso-8859-1', so we need to decode this into utf-8.
     if isinstance(path := raw.path, str):
