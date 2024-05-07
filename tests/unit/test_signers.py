@@ -5,13 +5,12 @@ SPDX-License-Identifier: Apache-2.0
 
 import re
 import typing
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from io import BytesIO
 
 import pytest
-
+from aws_sdk_signers import URI, AWSCredentialIdentity, AWSRequest, Fields
 from aws_sdk_signers.signers import SigV4Signer, SigV4SigningProperties
-from aws_sdk_signers import AWSCredentialIdentity, AWSRequest, Fields, URI
 
 SIGV4_RE = re.compile(
     r"AWS4-HMAC-SHA256 "
@@ -93,7 +92,7 @@ class TestSigV4Signer:
             access_key_id="AKID123456",
             secret_access_key="EXAMPLE1234SECRET",
             session_token="X123456SESSION",
-            expiration=datetime(1970, 1, 1, tzinfo=timezone.utc),
+            expiration=datetime(1970, 1, 1, tzinfo=UTC),
         )
         with pytest.raises(ValueError):
             self.SIGV4_SYNC_SIGNER.sign(

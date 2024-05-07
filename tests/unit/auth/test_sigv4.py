@@ -1,29 +1,28 @@
 import os
 import pathlib
 import re
+from collections.abc import Iterable
+from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
-from datetime import datetime, timezone
-from typing import Iterable
 
-from freezegun import freeze_time
 import pytest
-
 from aws_sdk_signers import (
-    AWSCredentialIdentity,
+    URI,
     AsyncBytesReader,
+    AWSCredentialIdentity,
     AWSRequest,
     Field,
     Fields,
-    URI,
 )
+from aws_sdk_signers.exceptions import AWSSDKWarning
 from aws_sdk_signers.signers import (
     SIGV4_TIMESTAMP_FORMAT,
     AsyncSigV4Signer,
     SigV4Signer,
     SigV4SigningProperties,
 )
-from aws_sdk_signers.exceptions import AWSSDKWarning
+from freezegun import freeze_time
 
 SECRET_KEY: str = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
 ACCESS_KEY: str = "AKIDEXAMPLE"
@@ -31,7 +30,7 @@ SERVICE: str = "service"
 REGION: str = "us-east-1"
 
 DATE: datetime = datetime(
-    year=2015, month=8, day=30, hour=12, minute=36, second=0, tzinfo=timezone.utc
+    year=2015, month=8, day=30, hour=12, minute=36, second=0, tzinfo=UTC
 )
 DATE_STR: str = DATE.strftime(SIGV4_TIMESTAMP_FORMAT)
 

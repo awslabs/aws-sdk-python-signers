@@ -2,7 +2,6 @@
 #  SPDX-License-Identifier: Apache-2.0
 
 import pytest
-
 from aws_sdk_signers import Field, Fields
 from aws_sdk_signers.interfaces.http import FieldPosition
 

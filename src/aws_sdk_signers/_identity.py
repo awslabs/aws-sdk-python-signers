@@ -1,7 +1,7 @@
 #  Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #  SPDX-License-Identifier: Apache-2.0
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from .interfaces.identity import Identity
 
@@ -18,4 +18,4 @@ class AWSCredentialIdentity(Identity):
         """Whether the identity is expired."""
         if self.expiration is None:
             return False
-        return self.expiration < datetime.now(timezone.utc)
+        return self.expiration < datetime.now(UTC)

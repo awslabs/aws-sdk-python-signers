@@ -10,11 +10,14 @@ including unannounced removal. For typing information, please rely on the
 __all__ attributes provided in the types/__init__.py file.
 """
 
+from __future__ import annotations
+
 from collections import Counter, OrderedDict
 from collections.abc import AsyncIterable, Iterable, Iterator
 from copy import deepcopy
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from functools import cached_property
+from typing import TypedDict
 from urllib.parse import urlunparse
 
 import aws_sdk_signers.interfaces.http as interfaces_http
@@ -285,8 +288,17 @@ class URI(interfaces_http.URI):
         )
         return urlunparse(components)
 
-    def to_dict(self) -> dict[str, int | str | None]:
-        return {k: v for k, v in asdict(self).items()}
+    def to_dict(self) -> URIParameters:
+        return {
+            "scheme": self.scheme,
+            "host": self.host,
+            "port": self.port,
+            "path": self.path,
+            "query": self.query,
+            "username": self.username,
+            "password": self.password,
+            "fragment": self.fragment,
+        }
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, URI):
@@ -301,6 +313,24 @@ class URI(interfaces_http.URI):
             and self.password == other.password
             and self.fragment == other.fragment
         )
+
+
+class URIParameters(TypedDict):
+    """TypedDict representing the parameters for the URI class. These need to be
+    kept in sync for the `to_dict` method.
+    """
+
+    # TODO: Unpack doesn't seem to do what we want, so we need a way to represent
+    # returning a class' paramaters as a dict. There must be a better way to do this.
+
+    scheme: str
+    username: str | None
+    password: str | None
+    host: str
+    port: int | None
+    path: str | None
+    query: str | None
+    fragment: str | None
 
 
 class AWSRequest(interfaces_http.Request):

@@ -1,27 +1,18 @@
 from asyncio import iscoroutinefunction
+from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable
 from io import BytesIO
 from typing import (
-    AsyncIterable,
-    AsyncIterator,
-    Awaitable,
-    Callable,
     Self,
-    Union,
     cast,
 )
+
 from aws_sdk_signers.interfaces.io import AsyncByteStream, ByteStream
 
 # The default chunk size for iterating streams.
 _DEFAULT_CHUNK_SIZE = 1024
 
 
-StreamingBlob = Union[
-    ByteStream,
-    AsyncByteStream,
-    bytes,
-    bytearray,
-    AsyncIterable[bytes],
-]
+StreamingBlob = ByteStream | AsyncByteStream | bytes | bytearray | AsyncIterable[bytes]
 
 
 class AsyncBytesReader:

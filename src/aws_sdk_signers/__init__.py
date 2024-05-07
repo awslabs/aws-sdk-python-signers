@@ -9,8 +9,8 @@ HTTP tools such as AioHTTP, Curl, Postman, Requests, urllib3, etc.
 from __future__ import annotations
 
 from ._http import URI, AWSRequest, Field, Fields
-from ._io import AsyncBytesReader
 from ._identity import AWSCredentialIdentity
+from ._io import AsyncBytesReader
 from ._version import __version__
 from .signers import SigV4Signer, SigV4SigningProperties
 

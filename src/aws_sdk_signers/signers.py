@@ -1,15 +1,15 @@
-from collections.abc import AsyncIterable, Iterable
-from copy import deepcopy
-from dataclasses import dataclass
 import datetime
-from hashlib import sha256
 import hmac
 import io
 import warnings
+from collections.abc import AsyncIterable, Iterable
+from copy import deepcopy
+from dataclasses import dataclass
+from hashlib import sha256
 from typing import Required, TypedDict
 from urllib.parse import parse_qsl, quote
 
-from ._http import URI, AWSRequest, Fields, Field
+from ._http import URI, AWSRequest, Field, Fields
 from ._identity import AWSCredentialIdentity
 from ._io import AsyncBytesReader
 from .exceptions import AWSSDKWarning, MissingExpectedParameterException
@@ -168,7 +168,7 @@ class SigV4Signer:
 
     def _resolve_signing_date(self, *, date: str | None) -> str:
         if date is None:
-            date_obj = datetime.datetime.now(datetime.timezone.utc)
+            date_obj = datetime.datetime.now(datetime.UTC)
             date = date_obj.strftime(SIGV4_TIMESTAMP_FORMAT)
         return date
 
@@ -250,13 +250,9 @@ class SigV4Signer:
 
     def _normalize_host_field(self, *, uri: URI) -> str:
         if uri.port is not None and DEFAULT_PORTS.get(uri.scheme) == uri.port:
-            # TODO: Fix typing mess here. Unpack doesn't do what we want.
-            pass
-            """
             uri_dict = uri.to_dict()
             uri_dict.update({"port": None})
             uri = URI(**uri_dict)
-            """
         return uri.netloc
 
     def _format_canonical_fields(self, *, fields: dict[str, str]) -> str:
@@ -432,7 +428,7 @@ class AsyncSigV4Signer:
 
     async def _resolve_signing_date(self, *, date: str | None) -> str:
         if date is None:
-            date_obj = datetime.datetime.now(datetime.timezone.utc)
+            date_obj = datetime.datetime.now(datetime.UTC)
             date = date_obj.strftime(SIGV4_TIMESTAMP_FORMAT)
         return date
 
@@ -520,13 +516,9 @@ class AsyncSigV4Signer:
 
     async def _normalize_host_field(self, *, uri: URI) -> str:
         if uri.port is not None and DEFAULT_PORTS.get(uri.scheme) == uri.port:
-            # TODO: Fix typing mess here. Unpack doesn't do what we want.
-            pass
-            """
             uri_dict = uri.to_dict()
             uri_dict.update({"port": None})
             uri = URI(**uri_dict)
-            """
         return uri.netloc
 
     async def _format_canonical_fields(self, *, fields: dict[str, str]) -> str:
