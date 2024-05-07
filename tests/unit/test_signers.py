@@ -4,6 +4,8 @@ SPDX-License-Identifier: Apache-2.0
 """
 
 import re
+import typing
+from datetime import datetime, timezone
 from io import BytesIO
 
 import pytest
@@ -27,32 +29,74 @@ def aws_identity() -> AWSCredentialIdentity:
     )
 
 
+@pytest.fixture(scope="module")
+def signing_properties() -> SigV4SigningProperties:
+    return SigV4SigningProperties(
+        region="us-west-2",
+        service="ec2",
+    )
+
+
+@pytest.fixture(scope="module")
+def aws_request() -> AWSRequest:
+    return AWSRequest(
+        destination=URI(
+            scheme="http",
+            host="127.0.0.1",
+            port=8000,
+        ),
+        method="GET",
+        body=BytesIO(b"123456"),
+        fields=Fields({}),
+    )
+
+
 class TestSigV4Signer:
     SIGV4_SYNC_SIGNER = SigV4Signer()
 
-    def test_sign(self, aws_identity: AWSCredentialIdentity):
-        signing_properties = SigV4SigningProperties(
-            region="us-west-2",
-            service="ec2",
-        )
-        request = AWSRequest(
-            destination=URI(
-                scheme="http",
-                host="127.0.0.1",
-                port=8000,
-            ),
-            method="GET",
-            body=BytesIO(b"123456"),
-            fields=Fields({}),
-        )
-
+    def test_sign(
+        self,
+        aws_identity: AWSCredentialIdentity,
+        aws_request: AWSRequest,
+        signing_properties: SigV4SigningProperties,
+    ) -> None:
         signed_request = self.SIGV4_SYNC_SIGNER.sign(
             signing_properties=signing_properties,
-            request=request,
+            request=aws_request,
             identity=aws_identity,
         )
         assert isinstance(signed_request, AWSRequest)
-        assert signed_request is not request
+        assert signed_request is not aws_request
         assert "authorization" in signed_request.fields
         authorization_field = signed_request.fields["authorization"]
         assert SIGV4_RE.match(authorization_field.as_string())
+
+    @typing.no_type_check
+    def test_sign_with_invalid_identity(
+        self, aws_request: AWSRequest, signing_properties: SigV4SigningProperties
+    ) -> None:
+        """Ignore typing as we're testing an invalid input state."""
+        identity = object()
+        assert not isinstance(identity, AWSCredentialIdentity)
+        with pytest.raises(ValueError):
+            self.SIGV4_SYNC_SIGNER.sign(
+                signing_properties=signing_properties,
+                request=aws_request,
+                identity=identity,
+            )
+
+    def test_sign_with_expired_identity(
+        self, aws_request: AWSRequest, signing_properties: SigV4SigningProperties
+    ) -> None:
+        identity = AWSCredentialIdentity(
+            access_key_id="AKID123456",
+            secret_access_key="EXAMPLE1234SECRET",
+            session_token="X123456SESSION",
+            expiration=datetime(1970, 1, 1, tzinfo=timezone.utc),
+        )
+        with pytest.raises(ValueError):
+            self.SIGV4_SYNC_SIGNER.sign(
+                signing_properties=signing_properties,
+                request=aws_request,
+                identity=identity,
+            )

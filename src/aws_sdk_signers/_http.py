@@ -307,7 +307,7 @@ class AWSRequest(interfaces_http.Request):
     def __init__(
         self,
         *,
-        destination: interfaces_http.URI,
+        destination: URI,
         method: str,
         body: AsyncIterable[bytes] | Iterable[bytes],
         fields: Fields,

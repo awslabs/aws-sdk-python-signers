@@ -4,17 +4,22 @@ import re
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
 from datetime import datetime, timezone
+from typing import Iterable
 
 from freezegun import freeze_time
 import pytest
 
 from aws_sdk_signers import AWSCredentialIdentity, AWSRequest, Field, Fields, URI
-from aws_sdk_signers.signers import SIGV4_TIMESTAMP_FORMAT, SigV4Signer, SigV4SigningProperties
+from aws_sdk_signers.signers import (
+    SIGV4_TIMESTAMP_FORMAT,
+    SigV4Signer,
+    SigV4SigningProperties,
+)
 
 SECRET_KEY: str = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
 ACCESS_KEY: str = "AKIDEXAMPLE"
-SERVICE: str = 'service'
-REGION: str = 'us-east-1'
+SERVICE: str = "service"
+REGION: str = "us-east-1"
 
 DATE: datetime = datetime(
     year=2015, month=8, day=30, hour=12, minute=36, second=0, tzinfo=timezone.utc
@@ -24,7 +29,6 @@ DATE_STR: str = DATE.strftime(SIGV4_TIMESTAMP_FORMAT)
 TESTSUITE_DIR: pathlib.Path = (
     pathlib.Path(__file__).absolute().parent / "aws4_testsuite"
 )
-
 
 
 class RawRequest(BaseHTTPRequestHandler):
@@ -43,9 +47,9 @@ class RawRequest(BaseHTTPRequestHandler):
 
 
 class SignatureTestCase:
-    def __init__(self, test_case):
+    def __init__(self, test_case: str) -> None:
         self.name: str = os.path.basename(test_case)
-        base_path = TESTSUITE_DIR / test_case
+        base_path: pathlib.Path = TESTSUITE_DIR / test_case
 
         self.raw_request: bytes = (base_path / f"{self.name}.req").read_bytes()
         self.canonical_request: str = (base_path / f"{self.name}.creq").read_text()
@@ -59,39 +63,31 @@ class SignatureTestCase:
         )
 
     def get_token(self) -> str | None:
-        token_pattern = r'^x-amz-security-token:(.*)$'
-        token_match = re.search(
-            token_pattern, self.canonical_request, re.MULTILINE
-        )
+        token_pattern = r"^x-amz-security-token:(.*)$"
+        token_match = re.search(token_pattern, self.canonical_request, re.MULTILINE)
         return token_match.group(1) if token_match else None
 
-def generate_test_cases():
+
+def generate_test_cases() -> Iterable[str]:
     for dirpath, dirnames, filenames in os.walk(TESTSUITE_DIR):
         # Skip over tests without a request file
-        if not any(f.endswith('.req') for f in filenames):
+        if not any(f.endswith(".req") for f in filenames):
             continue
 
-        test_case = os.path.relpath(dirpath, TESTSUITE_DIR).replace(
-            os.sep, '/'
-        )
-        '''
-        if test_case in TESTS_TO_IGNORE:
-            log.debug("Skipping test: %s", test_case)
-            continue
-        '''
+        test_case_name = os.path.relpath(dirpath, TESTSUITE_DIR).replace(os.sep, "/")
 
-        yield test_case
+        yield test_case_name
 
 
 @pytest.mark.parametrize("test_case", generate_test_cases())
 @freeze_time("2015-08-30 12:36:00")
-def test_signature_version_4(test_case):
+def test_signature_version_4(test_case_name: str) -> None:
     signer = SigV4Signer()
-    _test_signature_version_4(test_case, signer)
+    _test_signature_version_4(test_case_name, signer)
 
 
-def _test_signature_version_4(test_case, signer):
-    test_case = SignatureTestCase(test_case)
+def _test_signature_version_4(test_case_name: str, signer: SigV4Signer) -> None:
+    test_case = SignatureTestCase(test_case_name)
     request = create_request_from_raw_request(test_case)
 
     signing_props = SigV4SigningProperties(
@@ -99,7 +95,9 @@ def _test_signature_version_4(test_case, signer):
         service=SERVICE,
         date=DATE_STR,
     )
-    actual_canonical_request = signer.canonical_request(signing_properties=signing_props, request=request)
+    actual_canonical_request = signer.canonical_request(
+        signing_properties=signing_props, request=request
+    )
     assert test_case.canonical_request == actual_canonical_request
     actual_string_to_sign = signer.string_to_sign(
         canonical_request=actual_canonical_request, signing_properties=signing_props
@@ -109,14 +107,12 @@ def _test_signature_version_4(test_case, signer):
         signing_properties=signing_props,
         request=request,
         identity=test_case.credentials
-    ) 
+    )
     assert signed_request.fields['Authorization'].as_string() == test_case.authorization_header
     """
 
 
-def create_request_from_raw_request(
-    test_case: SignatureTestCase
-) -> AWSRequest:
+def create_request_from_raw_request(test_case: SignatureTestCase) -> AWSRequest:
     raw = RawRequest(raw_request=test_case.raw_request)
     if raw.error_code is not None:
         raise Exception(raw.error_message)
@@ -131,7 +127,12 @@ def create_request_from_raw_request(
             fields.set_field(field=field)
     fields.set_field(Field(name="X-Amz-Date", values=[DATE_STR]))
     if test_case.credentials.session_token is not None:
-        fields.set_field(Field(name="X-Amz-Security-Token", values=[test_case.credentials.session_token]))
+        fields.set_field(
+            Field(
+                name="X-Amz-Security-Token",
+                values=[test_case.credentials.session_token],
+            )
+        )
     body = raw.rfile
     # BaseHTTPRequestHandler encodes the first line of the request
     # as 'iso-8859-1', so we need to decode this into utf-8.

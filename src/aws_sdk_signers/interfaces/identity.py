@@ -20,22 +20,3 @@ class Identity(Protocol):
     def is_expired(self) -> bool:
         """Whether the identity is expired."""
         ...
-
-
-IdentityType = TypeVar("IdentityType", bound=Identity)
-IdentityType_contra = TypeVar("IdentityType_contra", bound=Identity, contravariant=True)
-IdentityType_cov = TypeVar("IdentityType_cov", bound=Identity, covariant=True)
-
-
-class IdentityProperties(TypedDict):
-    """Properties used to help determine the identity to return."""
-
-    ...
-
-
-IdentityPropertiesType = TypeVar("IdentityPropertiesType", bound=IdentityProperties)
-IdentityPropertiesType_contra = TypeVar(
-    "IdentityPropertiesType_contra", bound=IdentityProperties, contravariant=True
-)
-
-IdentityConfig_contra = TypeVar("IdentityConfig_contra", contravariant=True)

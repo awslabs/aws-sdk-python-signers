@@ -1,3 +1,4 @@
+exclude: 'tests/unit/auth/aws4_testsuite'
 repos:
   - repo: 'https://github.com/pre-commit/pre-commit-hooks'
     rev: v4.5.0
@@ -5,13 +6,13 @@ repos:
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
-  - repo: https://github.com/astral-sh/ruff-pre-commit
+  - repo: 'https://github.com/astral-sh/ruff-pre-commit'
     rev: v0.4.3
     hooks:
       - id: ruff
         args: [ --fix ]
       - id: ruff-format
-  - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.361
+  - repo: 'https://github.com/pre-commit/mirrors-mypy'
+    rev: 'v1.10.0'
     hooks:
-    - id: pyright
+      - id: mypy

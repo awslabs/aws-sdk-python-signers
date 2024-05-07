@@ -54,7 +54,7 @@ def test_field_multi_valued_basics() -> None:
         (["foo,bar\\", "val2"], '"foo,bar\\\\", val2'),
     ],
 )
-def test_field_serialization(values: list[str], expected: str):
+def test_field_serialization(values: list[str], expected: str) -> None:
     field = Field(name="_", values=values)
     assert field.as_string() == expected
 

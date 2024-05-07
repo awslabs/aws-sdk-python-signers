@@ -25,5 +25,6 @@ packages = ["src/aws_sdk_signers"]
 [tool.hatch.version]
 path = "src/aws_sdk_signers/_version.py"
 
-[tool.pyright]
-include = ["src/aws-sdk-signer", "tests"]
+[tool.mypy]
+python_version = "3.12"
+strict = true

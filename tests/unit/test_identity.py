@@ -39,7 +39,7 @@ def test_aws_credential_identity(
     secret_access_key: str,
     session_token: str | None,
     expiration: datetime | None,
-):
+) -> None:
     creds = AWSCredentialIdentity(
         access_key_id=access_key_id,
         secret_access_key=secret_access_key,
