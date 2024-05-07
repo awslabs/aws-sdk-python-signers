@@ -34,6 +34,7 @@ def signing_properties() -> SigV4SigningProperties:
     return SigV4SigningProperties(
         region="us-west-2",
         service="ec2",
+        payload_signing_enabled=False,
     )
 
 
@@ -41,7 +42,7 @@ def signing_properties() -> SigV4SigningProperties:
 def aws_request() -> AWSRequest:
     return AWSRequest(
         destination=URI(
-            scheme="http",
+            scheme="https",
             host="127.0.0.1",
             port=8000,
         ),
