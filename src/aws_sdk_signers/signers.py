@@ -21,6 +21,7 @@ DEFAULT_PORTS: dict[str, int] = {"http": 80, "https": 443}
 
 SIGV4_TIMESTAMP_FORMAT: str = "%Y%m%dT%H%M%SZ"
 UNSIGNED_PAYLOAD: str = "UNSIGNED-PAYLOAD"
+EMPTY_SHA256_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 
 class Configuration:
@@ -283,7 +284,7 @@ class SigV4Signer:
     def _format_canonical_path(self, *, path: str | None):
         if path is None:
             path = "/"
-        normalized_path = _remove_dot_segments(path)
+        normalized_path = _remove_dot_segments(path, remove_consecutive_slashes=True)
         return quote(string=normalized_path, safe="/%")
 
     def _format_canonical_query(self, *, query: str | None):
@@ -336,7 +337,7 @@ class SigV4Signer:
                 "of type Iterable[bytes]."
             )
         # TODO: Add ability to sign body
-        return UNSIGNED_PAYLOAD
+        return EMPTY_SHA256_HASH
 
 
 """
