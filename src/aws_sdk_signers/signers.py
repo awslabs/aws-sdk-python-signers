@@ -15,7 +15,10 @@ from ._io import AsyncBytesReader
 from .exceptions import AWSSDKWarning, MissingExpectedParameterException
 
 HEADERS_EXCLUDED_FROM_SIGNING: tuple[str, ...] = (
+    "accept",
+    "accept-encoding",
     "authorization",
+    "connection",
     "expect",
     "user-agent",
     "x-amz-content-sha256",
@@ -70,11 +73,16 @@ class SigV4Signer:
             signing_properties=signing_properties
         )
         new_request = self._generate_new_request(request=request)
+        self._apply_required_fields(
+            request=new_request,
+            signing_properties=new_signing_properties,
+            identity=identity,
+        )
 
         # Construct core signing components
         canonical_request = self.canonical_request(
-            signing_properties=signing_properties,
-            request=request,
+            signing_properties=new_signing_properties,
+            request=new_request,
         )
         string_to_sign = self.string_to_sign(
             canonical_request=canonical_request,
@@ -86,7 +94,7 @@ class SigV4Signer:
             signing_properties=new_signing_properties,
         )
 
-        signing_fields = self._normalize_signing_fields(request=request)
+        signing_fields = self._normalize_signing_fields(request=new_request)
         credential_scope = self._scope(signing_properties=new_signing_properties)
         credential = f"{identity.access_key_id}/{credential_scope}"
         authorization = self.generate_authorization_field(
@@ -171,6 +179,27 @@ class SigV4Signer:
             date_obj = datetime.datetime.now(datetime.UTC)
             date = date_obj.strftime(SIGV4_TIMESTAMP_FORMAT)
         return date
+
+    def _apply_required_fields(
+        self,
+        *,
+        request: AWSRequest,
+        signing_properties: SigV4SigningProperties,
+        identity: AWSCredentialIdentity,
+    ) -> None:
+        # Apply required X-Amz-Date if neither X-Amz-Date or Date are present.
+        if "Date" not in request.fields and "X-Amz-Date" not in request.fields:
+            request.fields.set_field(
+                Field(name="X-Amz-Date", values=[signing_properties["date"]])
+            )
+        # Apply required X-Amz-Security-Token if token present on identity
+        if (
+            "X-Amz-Security-Token" not in request.fields
+            and identity.session_token is not None
+        ):
+            request.fields.set_field(
+                Field(name="X-Amz-Security-Token", values=[identity.session_token])
+            )
 
     def canonical_request(
         self, *, signing_properties: SigV4SigningProperties, request: AWSRequest
@@ -289,12 +318,17 @@ class SigV4Signer:
         ):
             return UNSIGNED_PAYLOAD
 
+        body = request.body
+
+        if body is None:
+            return EMPTY_SHA256_HASH
+
         warnings.warn(
             "Payload signing is enabled. This may result in "
             "decreased performance for large request bodies.",
             AWSSDKWarning,
         )
-        body = request.body
+
         checksum = sha256()
         if hasattr(body, "seek") and hasattr(body, "tell"):
             position = body.tell()
@@ -330,6 +364,11 @@ class AsyncSigV4Signer:
             signing_properties=signing_properties
         )
         new_request = await self._generate_new_request(request=request)
+        await self._apply_required_fields(
+            request=new_request,
+            signing_properties=new_signing_properties,
+            identity=identity,
+        )
 
         # Construct core signing components
         canonical_request = await self.canonical_request(
@@ -431,6 +470,27 @@ class AsyncSigV4Signer:
             date_obj = datetime.datetime.now(datetime.UTC)
             date = date_obj.strftime(SIGV4_TIMESTAMP_FORMAT)
         return date
+
+    async def _apply_required_fields(
+        self,
+        *,
+        request: AWSRequest,
+        signing_properties: SigV4SigningProperties,
+        identity: AWSCredentialIdentity,
+    ) -> None:
+        # Apply required X-Amz-Date if neither X-Amz-Date or Date are present.
+        if "Date" not in request.fields and "X-Amz-Date" not in request.fields:
+            request.fields.set_field(
+                Field(name="X-Amz-Date", values=[signing_properties["date"]])
+            )
+        # Apply required X-Amz-Security-Token if token present on identity
+        if (
+            "X-Amz-Security-Token" not in request.fields
+            and identity.session_token is not None
+        ):
+            request.fields.set_field(
+                Field(name="X-Amz-Security-Token", values=[identity.session_token])
+            )
 
     async def canonical_request(
         self, *, signing_properties: SigV4SigningProperties, request: AWSRequest
@@ -549,6 +609,11 @@ class AsyncSigV4Signer:
         ):
             return UNSIGNED_PAYLOAD
 
+        body = request.body
+
+        if body is None:
+            return EMPTY_SHA256_HASH
+
         warnings.warn(
             "Payload signing is enabled. This may result in "
             "decreased performance for large request bodies.",
@@ -560,7 +625,7 @@ class AsyncSigV4Signer:
                 "SigV4Signer for sync AWSRequests or ensure your body is "
                 "of type AsyncIterable[bytes]."
             )
-        body = request.body
+
         checksum = sha256()
         if hasattr(body, "seek") and hasattr(body, "tell"):
             position = body.tell()
