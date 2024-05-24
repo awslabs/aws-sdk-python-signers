@@ -21,10 +21,10 @@ Currently, the `aws-sdk-signers` module provides two high level signers,
 Both of these signers takes three inputs to their primary `sign` method.
 
 * A [**SigV4SigningProperties**](https://github.com/awslabs/aws-sdk-python-signers/blob/eb78cde3b65a82ae052d632b43ba960a83643f8f/src/aws_sdk_signers/signers.py#L38-L42) object defining:
-     The service for the request,
-     The intended AWS region (e.g. us-west-2),
-     An optional date that will be auto-populated with the current time if not supplied,
-     An optional boolean, payload_signing_enabled to toggle payload signing. True by default.
+  * The service for the request,
+  * The intended AWS region (e.g. us-west-2),
+  * An optional date that will be auto-populated with the current time if not supplied,
+  * An optional boolean, payload_signing_enabled to toggle payload signing. True by default.
 * An [**AWSRequest**](https://github.com/awslabs/aws-sdk-python-signers/blob/eb78cde3b65a82ae052d632b43ba960a83643f8f/src/aws_sdk_signers/_http.py#L336), similar to the AWSRequest object from boto3 or Requests.
 * An [**AWSCredentialIdentity**](https://github.com/awslabs/aws-sdk-python-signers/blob/eb78cde3b65a82ae052d632b43ba960a83643f8f/src/aws_sdk_signers/_identity.py#L12-L24), an dataclass holding standard AWS credential information.
 
