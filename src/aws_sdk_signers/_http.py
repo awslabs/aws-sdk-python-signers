@@ -339,7 +339,7 @@ class AWSRequest(interfaces_http.Request):
         *,
         destination: URI,
         method: str,
-        body: AsyncIterable[bytes] | Iterable[bytes],
+        body: AsyncIterable[bytes] | Iterable[bytes] | None,
         fields: Fields,
     ):
         self.destination = destination
