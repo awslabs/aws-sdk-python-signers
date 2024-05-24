@@ -122,7 +122,7 @@ class Request(Protocol):
     """Protocol-agnostic representation of a request."""
 
     destination: URI
-    body: AsyncIterable[bytes] | Iterable[bytes]
+    body: AsyncIterable[bytes] | Iterable[bytes] | None
 
 
 class URI(Protocol):

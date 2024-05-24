@@ -19,3 +19,4 @@ repos:
         additional_dependencies:
           - pytest
           - freezegun
+        exclude: '^examples/'

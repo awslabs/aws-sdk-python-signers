@@ -731,12 +731,12 @@ class AsyncSigV4Signer:
         checksum = sha256()
         if hasattr(body, "seek") and hasattr(body, "tell"):
             position = body.tell()
-            async for chunk in body:
+            async for chunk in body:  # type: ignore[union-attr]
                 checksum.update(chunk)
             await body.seek(position)
         else:
             buffer = io.BytesIO()
-            async for chunk in body:
+            async for chunk in body:  # type: ignore[union-attr]
                 buffer.write(chunk)
                 checksum.update(chunk)
             buffer.seek(0)
