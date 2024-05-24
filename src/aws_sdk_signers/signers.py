@@ -25,7 +25,6 @@ HEADERS_EXCLUDED_FROM_SIGNING: tuple[str, ...] = (
     "connection",
     "expect",
     "user-agent",
-    "x-amz-content-sha256",
     "x-amzn-trace-id",
 )
 DEFAULT_PORTS: dict[str, int] = {"http": 80, "https": 443}
