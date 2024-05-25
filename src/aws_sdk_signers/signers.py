@@ -56,7 +56,7 @@ class SigV4Signer:
         """Generate and apply a SigV4 Signature to a copy of the supplied request.
 
         :param signing_properties:
-            SigV4SigningProperties to define signing primatives such as
+            SigV4SigningProperties to define signing primitives such as
             the target service, region, and date.
         :param request:
             An AWSRequest to sign prior to sending to the service.
@@ -195,7 +195,7 @@ class SigV4Signer:
         signing_properties: SigV4SigningProperties,
         identity: AWSCredentialIdentity,
     ) -> None:
-        # Apply required X-Amz-Date if neither X-Amz-Date or Date are present.
+        # Apply required X-Amz-Date if neither X-Amz-Date nor Date are present.
         if "Date" not in request.fields and "X-Amz-Date" not in request.fields:
             request.fields.set_field(
                 Field(name="X-Amz-Date", values=[signing_properties["date"]])
@@ -214,7 +214,7 @@ class SigV4Signer:
     ) -> str:
         """The canonical request is a standardized string laying out the
         components used in the SigV4 signing algorithm. This is useful to quickly
-        quickly compare inputs to find signature mismatches and unintended variances.
+        compare inputs to find signature mismatches and unintended variances.
 
         The SigV4 specification defines the canonical request to be:
             <HTTPMethod>\n
@@ -225,7 +225,7 @@ class SigV4Signer:
             <HashedPayload>
 
         :param signing_properties:
-            SigV4SigningProperties to define signing primatives such as
+            SigV4SigningProperties to define signing primitives such as
             the target service, region, and date.
         :param request:
             An AWSRequest to use for generating a SigV4 signature.
@@ -267,7 +267,7 @@ class SigV4Signer:
         :param canonical_request:
             String generated from the `canonical_request` method.
         :param signing_properties:
-            SigV4SigningProperties to define signing primatives such as
+            SigV4SigningProperties to define signing primitives such as
             the target service, region, and date.
         """
         date = signing_properties.get("date")
@@ -404,7 +404,7 @@ class AsyncSigV4Signer:
         """Generate and apply a SigV4 Signature to a copy of the supplied request.
 
         :param signing_properties:
-            SigV4SigningProperties to define signing primatives such as
+            SigV4SigningProperties to define signing primitives such as
             the target service, region, and date.
         :param request:
             An AWSRequest to sign prior to sending to the service.
@@ -544,7 +544,7 @@ class AsyncSigV4Signer:
         signing_properties: SigV4SigningProperties,
         identity: AWSCredentialIdentity,
     ) -> None:
-        # Apply required X-Amz-Date if neither X-Amz-Date or Date are present.
+        # Apply required X-Amz-Date if neither X-Amz-Date nor Date are present.
         if "Date" not in request.fields and "X-Amz-Date" not in request.fields:
             request.fields.set_field(
                 Field(name="X-Amz-Date", values=[signing_properties["date"]])
@@ -563,7 +563,7 @@ class AsyncSigV4Signer:
     ) -> str:
         """The canonical request is a standardized string laying out the
         components used in the SigV4 signing algorithm. This is useful to quickly
-        quickly compare inputs to find signature mismatches and unintended variances.
+        compare inputs to find signature mismatches and unintended variances.
 
         The SigV4 specification defines the canonical request to be:
             <HTTPMethod>\n
@@ -574,7 +574,7 @@ class AsyncSigV4Signer:
             <HashedPayload>
 
         :param signing_properties:
-            SigV4SigningProperties to define signing primatives such as
+            SigV4SigningProperties to define signing primitives such as
             the target service, region, and date.
         :param request:
             An AWSRequest to use for generating a SigV4 signature.
@@ -620,7 +620,7 @@ class AsyncSigV4Signer:
         :param canonical_request:
             String generated from the `canonical_request` method.
         :param signing_properties:
-            SigV4SigningProperties to define signing primatives such as
+            SigV4SigningProperties to define signing primitives such as
             the target service, region, and date.
         """
         date = signing_properties.get("date")

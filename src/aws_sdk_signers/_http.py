@@ -321,7 +321,7 @@ class URIParameters(TypedDict):
     """
 
     # TODO: Unpack doesn't seem to do what we want, so we need a way to represent
-    # returning a class' paramaters as a dict. There must be a better way to do this.
+    # returning a class' parameters as a dict. There must be a better way to do this.
 
     scheme: str
     username: str | None
@@ -357,7 +357,7 @@ class AWSRequest(interfaces_http.Request):
             return memo[id(self)]
 
         # the destination doesn't need to be copied because it's immutable
-        # the body can't be copied because its an iterator
+        # the body can't be copied because it's an iterator
         new_instance = self.__class__(
             destination=self.destination,
             body=self.body,

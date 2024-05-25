@@ -168,7 +168,7 @@ class SeekableAsyncBytesReader:
         return self._buffer.read(size)
 
     async def seek(self, offset: int, whence: int = 0) -> int:
-        """Moves the cursor to a position relatve to the position indicated by whence.
+        """Moves the cursor to a position relative to the position indicated by whence.
 
         Whence can have one of three values:
 
