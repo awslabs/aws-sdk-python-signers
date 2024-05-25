@@ -26,7 +26,7 @@ Both of these signers takes three inputs to their primary `sign` method.
   * An optional date that will be auto-populated with the current time if not supplied,
   * An optional boolean, payload_signing_enabled to toggle payload signing. True by default.
 * An [**AWSRequest**](https://github.com/awslabs/aws-sdk-python-signers/blob/eb78cde3b65a82ae052d632b43ba960a83643f8f/src/aws_sdk_signers/_http.py#L336), similar to the AWSRequest object from boto3 or Requests.
-* An [**AWSCredentialIdentity**](https://github.com/awslabs/aws-sdk-python-signers/blob/eb78cde3b65a82ae052d632b43ba960a83643f8f/src/aws_sdk_signers/_identity.py#L12-L24), an dataclass holding standard AWS credential information.
+* An [**AWSCredentialIdentity**](https://github.com/awslabs/aws-sdk-python-signers/blob/eb78cde3b65a82ae052d632b43ba960a83643f8f/src/aws_sdk_signers/_identity.py#L12-L24), a dataclass holding standard AWS credential information.
 
 The signers can be used independently to build signing integrations with your favorite
 HTTP client or with the example code provided in the [`/examples`](https://github.com/awslabs/aws-sdk-python-signers/blob/main/examples/) directory. Currently,

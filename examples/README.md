@@ -33,7 +33,7 @@ signing_properties = SigV4SigningProperties(region=REGION, service=SERVICE)
 
 def get_credentials_from_env():
     """You will need to pull credentials from some source to use the signer.
-    This will autopopulate an AWSCredentialIdentity when credentials are
+    This will auto-populate an AWSCredentialIdentity when credentials are
     available through the env.
 
     You may also consider using another SDK to assume a role or pull
@@ -87,7 +87,7 @@ signing_properties = SigV4SigningProperties(region=REGION, service=SERVICE)
 
 def get_credentials_from_env():
     """You will need to pull credentials from some source to use the signer.
-    This will autopopulate an AWSCredentialIdentity when credentials are
+    This will auto-populate an AWSCredentialIdentity when credentials are
     available through the env.
 
     You may also consider using another SDK to assume a role or pull
