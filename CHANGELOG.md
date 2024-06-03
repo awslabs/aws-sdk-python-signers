@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.0.2
+
+### Feature
+* Added new ``content_checksum_enabled`` parameter to SigV4SigningProperties.
+
+  This will enable users to control the inclusion of the `X-Amz-Content-SHA256`
+  header required by S3. This is _disabled_ by default, so you will need to
+  set this to `True` for any S3 requests.
+
+### Bugfixes
+* Fixed incorrect exclusion of `X-Amz-Content-SHA256` header from some requests.
+
 ## 0.0.1
 
 ### Features
