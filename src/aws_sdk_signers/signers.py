@@ -39,6 +39,7 @@ class SigV4SigningProperties(TypedDict, total=False):
     service: Required[str]
     date: str
     payload_signing_enabled: bool
+    content_checksum_enabled: bool
 
 
 class SigV4Signer:
@@ -230,13 +231,15 @@ class SigV4Signer:
         :param request:
             An AWSRequest to use for generating a SigV4 signature.
         """
+        # We generate the payload first to ensure any field modifications
+        # are in place before choosing the canonical fields.
+        canonical_payload = self._format_canonical_payload(
+            request=request, signing_properties=signing_properties
+        )
         canonical_path = self._format_canonical_path(path=request.destination.path)
         canonical_query = self._format_canonical_query(query=request.destination.query)
         normalized_fields = self._normalize_signing_fields(request=request)
         canonical_fields = self._format_canonical_fields(fields=normalized_fields)
-        canonical_payload = self._format_canonical_payload(
-            request=request, signing_properties=signing_properties
-        )
         return (
             f"{request.method.upper()}\n"
             f"{canonical_path}\n"
@@ -357,6 +360,18 @@ class SigV4Signer:
                 "AsyncSigV4Signer for async AWSRequests or ensure your body is "
                 "of type Iterable[bytes]."
             )
+        payload_hash = self._compute_payload_hash(
+            request=request, signing_properties=signing_properties
+        )
+        if signing_properties.get("content_checksum_enabled", False):
+            request.fields.set_field(
+                Field(name="X-Amz-Content-SHA256", values=[payload_hash])
+            )
+        return payload_hash
+
+    def _compute_payload_hash(
+        self, *, request: AWSRequest, signing_properties: SigV4SigningProperties
+    ) -> str:
         if not self._should_sha256_sign_payload(
             request=request, signing_properties=signing_properties
         ):
@@ -376,12 +391,12 @@ class SigV4Signer:
         checksum = sha256()
         if hasattr(body, "seek") and hasattr(body, "tell"):
             position = body.tell()
-            for chunk in body:
+            for chunk in body:  # type: ignore[union-attr]
                 checksum.update(chunk)
             body.seek(position)
         else:
             buffer = io.BytesIO()
-            for chunk in body:
+            for chunk in body:  # type: ignore[union-attr]
                 buffer.write(chunk)
                 checksum.update(chunk)
             buffer.seek(0)
@@ -579,6 +594,11 @@ class AsyncSigV4Signer:
         :param request:
             An AWSRequest to use for generating a SigV4 signature.
         """
+        # We generate the payload first to ensure any field modifications
+        # are in place before choosing the canonical fields.
+        canonical_payload = await self._format_canonical_payload(
+            request=request, signing_properties=signing_properties
+        )
         canonical_path = await self._format_canonical_path(
             path=request.destination.path
         )
@@ -587,9 +607,6 @@ class AsyncSigV4Signer:
         )
         normalized_fields = await self._normalize_signing_fields(request=request)
         canonical_fields = await self._format_canonical_fields(fields=normalized_fields)
-        canonical_payload = await self._format_canonical_payload(
-            request=request, signing_properties=signing_properties
-        )
         return (
             f"{request.method.upper()}\n"
             f"{canonical_path}\n"
@@ -705,6 +722,18 @@ class AsyncSigV4Signer:
         request: AWSRequest,
         signing_properties: SigV4SigningProperties,
     ) -> str:
+        payload_hash = await self._compute_payload_hash(
+            request=request, signing_properties=signing_properties
+        )
+        if signing_properties.get("content_checksum_enabled", False):
+            request.fields.set_field(
+                Field(name="X-Amz-Content-SHA256", values=[payload_hash])
+            )
+        return payload_hash
+
+    async def _compute_payload_hash(
+        self, *, request: AWSRequest, signing_properties: SigV4SigningProperties
+    ) -> str:
         if not await self._should_sha256_sign_payload(
             request=request, signing_properties=signing_properties
         ):
@@ -715,24 +744,24 @@ class AsyncSigV4Signer:
         if body is None:
             return EMPTY_SHA256_HASH
 
+        if not isinstance(request.body, AsyncIterable):
+            raise TypeError(
+                "A sync body was attached to an asynchronous signer. Please use "
+                "SigV4Signer for sync AWSRequests or ensure your body is "
+                "of type AsyncIterable[bytes]."
+            )
         warnings.warn(
             "Payload signing is enabled. This may result in "
             "decreased performance for large request bodies.",
             AWSSDKWarning,
         )
-        if not isinstance(request.body, AsyncIterable):
-            raise TypeError(
-                "A sync body was attached to a asynchronous signer. Please use "
-                "SigV4Signer for sync AWSRequests or ensure your body is "
-                "of type AsyncIterable[bytes]."
-            )
 
         checksum = sha256()
         if hasattr(body, "seek") and hasattr(body, "tell"):
             position = body.tell()
             async for chunk in body:  # type: ignore[union-attr]
                 checksum.update(chunk)
-            await body.seek(position)
+            body.seek(position)
         else:
             buffer = io.BytesIO()
             async for chunk in body:  # type: ignore[union-attr]

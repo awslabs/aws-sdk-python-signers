@@ -27,10 +27,6 @@ REGION="us-west-2"
 # https://docs.aws.amazon.com/lambda/latest/api/API_ListFunctions.html
 URL='https://lambda.us-west-2.amazonaws.com/2015-03-31/functions/'
 
-# Set up our signing properties
-signing_properties = SigV4SigningProperties(region=REGION, service=SERVICE)
-
-
 def get_credentials_from_env():
     """You will need to pull credentials from some source to use the signer.
     This will auto-populate an AWSCredentialIdentity when credentials are
@@ -82,9 +78,6 @@ REGION="us-west-2"
 # https://docs.aws.amazon.com/lambda/latest/api/API_ListFunctions.html
 URL='https://lambda.us-west-2.amazonaws.com/2015-03-31/functions/'
 
-# Set up our signing properties
-signing_properties = SigV4SigningProperties(region=REGION, service=SERVICE)
-
 def get_credentials_from_env():
     """You will need to pull credentials from some source to use the signer.
     This will auto-populate an AWSCredentialIdentity when credentials are
@@ -130,7 +123,7 @@ and a request body. We can expand this to support arbitrary curl arguments in
 a future version if there's demand.
 
 ### Curl Sample
-```
+```python
 from examples import curl_signer
 from aws_sdk_signers import SigV4SigningProperties, AWSCredentialIdentity
 

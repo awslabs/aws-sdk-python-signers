@@ -20,6 +20,7 @@ SIGNING_HEADERS = (
     "Date",
     "X-Amz-Date",
     "X-Amz-Security-Token",
+    "X-Amz-Content-SHA256",
 )
 
 
