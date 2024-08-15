@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aws-sdk-signers"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 authors = [
   {name = "Amazon Web Services"},
 ]
@@ -14,7 +14,7 @@ license = {file = "LICENSE"}
 keywords = ["AWS", "Signing", "SigV4", "HTTP"]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
-  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python"
 ]
 dynamic = ["version"]
@@ -59,7 +59,7 @@ docstring-code-format = false
 docstring-code-line-length = "dynamic"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.11"
 strict = true
 
 [tool.pytest.ini_options]
