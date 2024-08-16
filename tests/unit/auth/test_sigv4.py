@@ -1,6 +1,7 @@
 import os
 import pathlib
 import re
+import sys
 from collections.abc import Iterable
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler
@@ -24,13 +25,20 @@ from aws_sdk_signers.signers import (
 )
 from freezegun import freeze_time
 
+if sys.version_info < (3, 12):
+    from datetime import timezone
+
+    UTC = timezone.utc
+else:
+    from datetime import UTC
+
 SECRET_KEY: str = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
 ACCESS_KEY: str = "AKIDEXAMPLE"
 SERVICE: str = "service"
 REGION: str = "us-east-1"
 
 DATE: datetime = datetime(
-    year=2015, month=8, day=30, hour=12, minute=36, second=0, tzinfo=timezone.utc
+    year=2015, month=8, day=30, hour=12, minute=36, second=0, tzinfo=UTC
 )
 DATE_STR: str = DATE.strftime(SIGV4_TIMESTAMP_FORMAT)
 

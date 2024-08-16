@@ -4,6 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 """
 
 import re
+import sys
 import typing
 from datetime import datetime, timezone
 from io import BytesIO
@@ -18,6 +19,13 @@ from aws_sdk_signers import (
     SigV4Signer,
     SigV4SigningProperties,
 )
+
+if sys.version_info < (3, 12):
+    from datetime import timezone
+
+    UTC = timezone.utc
+else:
+    from datetime import UTC
 
 SIGV4_RE = re.compile(
     r"AWS4-HMAC-SHA256 "
@@ -99,7 +107,7 @@ class TestSigV4Signer:
             access_key_id="AKID123456",
             secret_access_key="EXAMPLE1234SECRET",
             session_token="X123456SESSION",
-            expiration=datetime(1970, 1, 1, tzinfo=timezone.utc),
+            expiration=datetime(1970, 1, 1, tzinfo=UTC),
         )
         with pytest.raises(ValueError):
             self.SIGV4_SYNC_SIGNER.sign(
@@ -150,7 +158,7 @@ class TestAsyncSigV4Signer:
             access_key_id="AKID123456",
             secret_access_key="EXAMPLE1234SECRET",
             session_token="X123456SESSION",
-            expiration=datetime(1970, 1, 1, tzinfo=timezone.utc),
+            expiration=datetime(1970, 1, 1, tzinfo=UTC),
         )
         with pytest.raises(ValueError):
             await self.SIGV4_ASYNC_SIGNER.sign(

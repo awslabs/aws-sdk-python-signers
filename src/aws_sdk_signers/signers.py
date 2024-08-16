@@ -24,6 +24,12 @@ from ._identity import AWSCredentialIdentity
 from ._io import AsyncBytesReader
 from .exceptions import AWSSDKWarning, MissingExpectedParameterException
 
+if sys.version_info < (3, 12):
+    from datetime import timezone
+    UTC = timezone.utc
+else:
+    from datetime import UTC
+
 HEADERS_EXCLUDED_FROM_SIGNING: tuple[str, ...] = (
     "accept",
     "accept-encoding",
@@ -191,7 +197,7 @@ class SigV4Signer:
 
     def _resolve_signing_date(self, *, date: str | None) -> str:
         if date is None:
-            date_obj = datetime.datetime.now(datetime.timezone.utc)
+            date_obj = datetime.datetime.now(UTC)
             date = date_obj.strftime(SIGV4_TIMESTAMP_FORMAT)
         return date
 
@@ -554,7 +560,7 @@ class AsyncSigV4Signer:
 
     async def _resolve_signing_date(self, *, date: str | None) -> str:
         if date is None:
-            date_obj = datetime.datetime.now(datetime.timezone.utc)
+            date_obj = datetime.datetime.now(UTC)
             date = date_obj.strftime(SIGV4_TIMESTAMP_FORMAT)
         return date
 

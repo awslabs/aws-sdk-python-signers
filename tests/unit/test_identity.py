@@ -1,7 +1,16 @@
-from datetime import datetime, timedelta, timezone
+import sys
+from datetime import datetime, timedelta
 
 import pytest
+
 from aws_sdk_signers import AWSCredentialIdentity
+
+if sys.version_info < (3, 12):
+    from datetime import timezone
+
+    UTC = timezone.utc
+else:
+    from datetime import UTC
 
 
 @pytest.mark.parametrize(
@@ -23,13 +32,13 @@ from aws_sdk_signers import AWSCredentialIdentity
             "AKID1234EXAMPLE",
             "SECRET1234",
             None,
-            datetime(2024, 5, 1, 0, 0, 0, tzinfo=timezone.utc),
+            datetime(2024, 5, 1, 0, 0, 0, tzinfo=UTC),
         ),
         (
             "AKID1234EXAMPLE",
             "SECRET1234",
             "SESS_TOKEN_1234",
-            datetime(2024, 5, 1, 0, 0, 0, tzinfo=timezone.utc),
+            datetime(2024, 5, 1, 0, 0, 0, tzinfo=UTC),
         ),
     ],
 )
@@ -65,14 +74,14 @@ def test_aws_credential_identity(
             "AKID1234EXAMPLE",
             "SECRET1234",
             None,
-            datetime(2024, 5, 1, 0, 0, 0, tzinfo=timezone.utc),
+            datetime(2024, 5, 1, 0, 0, 0, tzinfo=UTC),
             True,
         ),
         (
             "AKID1234EXAMPLE",
             "SECRET1234",
             "SESS_TOKEN_1234",
-            datetime.now(timezone.utc) + timedelta(hours=1),
+            datetime.now(UTC) + timedelta(hours=1),
             False,
         ),
     ],
