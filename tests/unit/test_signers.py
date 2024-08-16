@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 import re
 import sys
 import typing
-from datetime import datetime, timezone
+from datetime import datetime
 from io import BytesIO
 
 import pytest
