@@ -26,6 +26,7 @@ from .exceptions import AWSSDKWarning, MissingExpectedParameterException
 
 if sys.version_info < (3, 12):
     from datetime import timezone
+
     UTC = timezone.utc
 else:
     from datetime import UTC

@@ -2,7 +2,6 @@ import sys
 from datetime import datetime, timedelta
 
 import pytest
-
 from aws_sdk_signers import AWSCredentialIdentity
 
 if sys.version_info < (3, 12):
