@@ -3,7 +3,7 @@ import pathlib
 import re
 import sys
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
 
