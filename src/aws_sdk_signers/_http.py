@@ -210,7 +210,7 @@ class Fields(interfaces_http.Fields):
         return len(self.entries)
 
     def __repr__(self) -> str:
-        return f"Fields({self.entries})"
+        return f"Fields({dict(self.entries)})"
 
     def __contains__(self, key: str) -> bool:
         return self._normalize_field_name(key) in self.entries

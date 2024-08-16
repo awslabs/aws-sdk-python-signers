@@ -210,8 +210,8 @@ def test_fields_length_value(fields: Fields, expected_length: int) -> None:
         (
             Fields([Field(name="fname1")]),
             (
-                "Fields(OrderedDict({'fname1': Field(name='fname1', value=[], "
-                "kind=<FieldPosition.HEADER: 0>)}))"
+                "Fields({'fname1': Field(name='fname1', value=[], "
+                "kind=<FieldPosition.HEADER: 0>)})"
             ),
         ),
     ],
