@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 """
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 from .interfaces.identity import Identity
 
@@ -21,4 +21,4 @@ class AWSCredentialIdentity(Identity):
         """Whether the identity is expired."""
         if self.expiration is None:
             return False
-        return self.expiration < datetime.now(UTC)
+        return self.expiration < datetime.now(timezone.utc)

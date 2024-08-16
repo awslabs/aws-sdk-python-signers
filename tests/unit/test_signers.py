@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 import re
 import typing
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from io import BytesIO
 
 import pytest
@@ -99,7 +99,7 @@ class TestSigV4Signer:
             access_key_id="AKID123456",
             secret_access_key="EXAMPLE1234SECRET",
             session_token="X123456SESSION",
-            expiration=datetime(1970, 1, 1, tzinfo=UTC),
+            expiration=datetime(1970, 1, 1, tzinfo=timezone.utc),
         )
         with pytest.raises(ValueError):
             self.SIGV4_SYNC_SIGNER.sign(
@@ -150,7 +150,7 @@ class TestAsyncSigV4Signer:
             access_key_id="AKID123456",
             secret_access_key="EXAMPLE1234SECRET",
             session_token="X123456SESSION",
-            expiration=datetime(1970, 1, 1, tzinfo=UTC),
+            expiration=datetime(1970, 1, 1, tzinfo=timezone.utc),
         )
         with pytest.raises(ValueError):
             await self.SIGV4_ASYNC_SIGNER.sign(

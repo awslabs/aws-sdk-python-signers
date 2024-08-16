@@ -2,7 +2,7 @@ import os
 import pathlib
 import re
 from collections.abc import Iterable
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
 
@@ -30,7 +30,7 @@ SERVICE: str = "service"
 REGION: str = "us-east-1"
 
 DATE: datetime = datetime(
-    year=2015, month=8, day=30, hour=12, minute=36, second=0, tzinfo=UTC
+    year=2015, month=8, day=30, hour=12, minute=36, second=0, tzinfo=timezone.utc
 )
 DATE_STR: str = DATE.strftime(SIGV4_TIMESTAMP_FORMAT)
 

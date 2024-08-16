@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aws-sdk-signers"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [
   {name = "Amazon Web Services"},
 ]
@@ -18,6 +18,9 @@ classifiers = [
   "Programming Language :: Python"
 ]
 dynamic = ["version"]
+dependencies = [
+    'typing-extensions >=4.12.2,<5 ; python_version == "3.10"',
+]
 
 [project.optional-dependencies]
 test = [
@@ -38,8 +41,6 @@ path = "src/aws_sdk_signers/_version.py"
 line-length = 88
 indent-width = 4
 
-target-version = "py312"
-
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I", "UP"]
 ignore = []
@@ -59,7 +60,7 @@ docstring-code-format = false
 docstring-code-line-length = "dynamic"
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 
 [tool.pytest.ini_options]

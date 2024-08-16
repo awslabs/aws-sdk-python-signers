@@ -6,12 +6,18 @@ SPDX-License-Identifier: Apache-2.0
 import datetime
 import hmac
 import io
+import sys
 import warnings
 from collections.abc import AsyncIterable
 from copy import deepcopy
 from hashlib import sha256
-from typing import Required, TypedDict
+from typing import TypedDict
 from urllib.parse import parse_qsl, quote
+
+if sys.version_info < (3, 11):
+    from typing_extensions import Required
+else:
+    from typing import Required
 
 from ._http import URI, AWSRequest, Field
 from ._identity import AWSCredentialIdentity
@@ -185,7 +191,7 @@ class SigV4Signer:
 
     def _resolve_signing_date(self, *, date: str | None) -> str:
         if date is None:
-            date_obj = datetime.datetime.now(datetime.UTC)
+            date_obj = datetime.datetime.now(datetime.timezone.utc)
             date = date_obj.strftime(SIGV4_TIMESTAMP_FORMAT)
         return date
 
@@ -548,7 +554,7 @@ class AsyncSigV4Signer:
 
     async def _resolve_signing_date(self, *, date: str | None) -> str:
         if date is None:
-            date_obj = datetime.datetime.now(datetime.UTC)
+            date_obj = datetime.datetime.now(datetime.timezone.utc)
             date = date_obj.strftime(SIGV4_TIMESTAMP_FORMAT)
         return date
 

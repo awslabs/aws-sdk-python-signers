@@ -3,13 +3,16 @@ Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 """
 
+import sys
 from asyncio import iscoroutinefunction
 from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable
 from io import BytesIO
-from typing import (
-    Self,
-    cast,
-)
+from typing import cast
+
+if sys.version_info < (3, 11):
+    from typing_extensions import Self
+else:
+    from typing import Self
 
 from aws_sdk_signers.interfaces.io import AsyncByteStream, ByteStream
 
