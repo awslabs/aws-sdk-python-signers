@@ -1,7 +1,15 @@
-from datetime import UTC, datetime, timedelta
+import sys
+from datetime import datetime, timedelta
 
 import pytest
 from aws_sdk_signers import AWSCredentialIdentity
+
+if sys.version_info < (3, 12):
+    from datetime import timezone
+
+    UTC = timezone.utc
+else:
+    from datetime import UTC
 
 
 @pytest.mark.parametrize(

@@ -1,8 +1,9 @@
 import os
 import pathlib
 import re
+import sys
 from collections.abc import Iterable
-from datetime import UTC, datetime
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler
 from io import BytesIO
 
@@ -23,6 +24,13 @@ from aws_sdk_signers.signers import (
     SigV4SigningProperties,
 )
 from freezegun import freeze_time
+
+if sys.version_info < (3, 12):
+    from datetime import timezone
+
+    UTC = timezone.utc
+else:
+    from datetime import UTC
 
 SECRET_KEY: str = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
 ACCESS_KEY: str = "AKIDEXAMPLE"

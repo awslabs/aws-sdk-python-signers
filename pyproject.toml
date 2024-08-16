@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aws-sdk-signers"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 authors = [
   {name = "Amazon Web Services"},
 ]
@@ -14,10 +14,15 @@ license = {file = "LICENSE"}
 keywords = ["AWS", "Signing", "SigV4", "HTTP"]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python"
 ]
 dynamic = ["version"]
+dependencies = [
+    'typing-extensions >=4.12.2,<5 ; python_version == "3.10"',
+]
 
 [project.optional-dependencies]
 test = [
@@ -37,8 +42,6 @@ path = "src/aws_sdk_signers/_version.py"
 [tool.ruff]
 line-length = 88
 indent-width = 4
-
-target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I", "UP"]

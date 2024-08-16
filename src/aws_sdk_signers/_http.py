@@ -12,6 +12,7 @@ __all__ attributes provided in the types/__init__.py file.
 
 from __future__ import annotations
 
+import sys
 from collections import Counter, OrderedDict
 from collections.abc import AsyncIterable, Iterable, Iterator
 from copy import deepcopy
@@ -210,7 +211,12 @@ class Fields(interfaces_http.Fields):
         return len(self.entries)
 
     def __repr__(self) -> str:
-        return f"Fields({self.entries})"
+        if sys.version_info < (3, 12):
+            # Dicts are ordered in 3.11 and 3.10, so it's safe to use dict.
+            # Used to mock a 3.12-like output.
+            return f"Fields(OrderedDict({dict(self.entries)}))"
+        else:
+            return f"Fields({self.entries})"
 
     def __contains__(self, key: str) -> bool:
         return self._normalize_field_name(key) in self.entries

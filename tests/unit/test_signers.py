@@ -4,8 +4,9 @@ SPDX-License-Identifier: Apache-2.0
 """
 
 import re
+import sys
 import typing
-from datetime import UTC, datetime
+from datetime import datetime
 from io import BytesIO
 
 import pytest
@@ -18,6 +19,13 @@ from aws_sdk_signers import (
     SigV4Signer,
     SigV4SigningProperties,
 )
+
+if sys.version_info < (3, 12):
+    from datetime import timezone
+
+    UTC = timezone.utc
+else:
+    from datetime import UTC
 
 SIGV4_RE = re.compile(
     r"AWS4-HMAC-SHA256 "
