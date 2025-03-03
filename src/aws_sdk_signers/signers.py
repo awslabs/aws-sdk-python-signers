@@ -761,7 +761,7 @@ class AsyncSigV4Signer:
             position = body.tell()
             async for chunk in body:  # type: ignore[union-attr]
                 checksum.update(chunk)
-            body.seek(position)
+            await body.seek(position)
         else:
             buffer = io.BytesIO()
             async for chunk in body:  # type: ignore[union-attr]
