@@ -2,7 +2,7 @@
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 SPDX-License-Identifier: Apache-2.0
 
-Sample signer using Requests.
+Sample signer using Curl.
 """
 
 import typing
