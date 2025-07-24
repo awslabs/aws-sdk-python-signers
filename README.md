@@ -1,5 +1,9 @@
 ## AWS SDK Python Signers
 
+> [!IMPORTANT]
+> This repository is no longer maintained. The project has been moved to [Smithy Python](https://github.com/smithy-lang/smithy-python/tree/develop/packages/aws-sdk-signers)
+where you can find the latest releases of `aws-sdk-signers`.
+
 AWS SDK Python Signers provides stand-alone signing functionality. This enables users to
 create standardized request signatures (currently only SigV4) and apply them to
 common HTTP utilities like AIOHTTP, Curl, Postman, Requests and urllib3.
